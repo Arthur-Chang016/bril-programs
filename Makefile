@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -std=c++11 -Wall -I./include
+CXXFLAGS := -std=c++11 -Wall -I./lib -I./include
 
 # Directories
 SRCDIR := opt
@@ -25,9 +25,10 @@ $(BUILDDIR):
 	
 	
 # Miscellaneous
-run:
-	build/LVN < test/add.json
+run: all
 	# bril2json < test/print/add.bril | brili
+	build/LVN < test/add.json
+	
 
 
 # Clean target to remove generated executables
