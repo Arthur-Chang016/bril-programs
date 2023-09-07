@@ -17,17 +17,39 @@ json ReadStdin() {
 }
 
 vector<BasicBlock> BuildBasicBlock(json instrs) {
-    // TODO
+    // lambda utilities
+    auto isControl = [](json inst)->bool {
+        return inst.is_object() && inst.count("op") && (inst["op"] == "br" || inst["op"] == "jmp" || inst["op"] == "ret");
+    };
     
-    BasicBlock bb;
-    for (json &inst: instrs) {
-        bb.push_back(inst);
+    auto isLabel = [](json inst)->bool {
+        return inst.is_object() && inst.count("label");
+    };
+    
+    // BB partition
+    vector<BasicBlock> ret;
+    BasicBlock tmpBB;
+    for(int i = 0, n = instrs.size(); i < n - 1; ++i) {
+        
+        json cur = instrs[i], next = instrs[i + 1];
+        bool endOfBlock = isControl(cur) || isLabel(next);
+        
+        if(endOfBlock) {
+            tmpBB.push_back(cur);
+            ret.push_back(tmpBB);
+            tmpBB = BasicBlock();  // clear
+        } else {
+            tmpBB.push_back(cur);
+        }
     }
+    // the last instruction
+    tmpBB.push_back(instrs.back());
+    ret.push_back(tmpBB);
     
-    return {bb};
+    return ret;
 }
 
-json convertToInst(vector<BasicBlock> &BBs) {
+json convertToInstrs(vector<BasicBlock> &BBs) {
     json retInstrs = json::array();
     for(BasicBlock &bb: BBs) {
         for(json &inst: bb.instrs) {
@@ -50,15 +72,18 @@ int main(int argc, char **argv) {
     for(auto &func: program["functions"]) {
         vector<BasicBlock> BBs = BuildBasicBlock(func["instrs"]);
         
+        
+        
         for(BasicBlock &bb: BBs) {
+            // bb.print();
+            
             bb = LVN(bb);
         }
-        func["instrs"] = convertToInst(BBs);
+        func["instrs"] = convertToInstrs(BBs);
     }
     
-    cout << program << endl;
+    // cout << program << endl;
     
     
     return 0;
 }
-
