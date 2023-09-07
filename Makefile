@@ -22,6 +22,13 @@ $(BUILDDIR)/%: $(SRCDIR)/%.cpp | $(BUILDDIR)
 # Create the build directory if it doesn't exist
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
+	
+	
+# Miscellaneous
+run:
+	build/LVN < test/add.json
+	# bril2json < test/print/add.bril | brili
+
 
 # Clean target to remove generated executables
 clean:
