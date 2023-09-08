@@ -26,14 +26,13 @@ public:
 class Value {
 public:
     string op;
-    // vector<arg> args;
-    vector<string> args;
-    long constVal = 0;
-    bool isConst = false;
+    vector<long> args;  // op const also put in the args
+    // long constVal = 0;
+    // bool isConst = false;
     
     // constructor
-    Value(string o, vector<string> a): op(o), args(a), isConst(false) {}
-    Value(string o, long c): op(o), constVal(c), isConst(true) {}
+    Value(string o, vector<long> a): op(o), args(a) {}
+    Value(string o, long c): op(o), args({c}) {}
     
     // comparator (for map)
     bool operator<(const Value& rhs) const {
@@ -45,13 +44,17 @@ public:
     // methods
     void print() {
         cout << "{ " << op << " ";
-        if(isConst) {
-            cout << constVal << ' ';
-        } else {
-            for(string &s: args) {
-                cout << s << ' ';
-            }
+        for(int i: args) {
+            cout << i << ' ';
         }
+        
+        // if(isConst) {
+        //     cout << constVal << ' ';
+        // } else {
+        //     for(int i: args) {
+        //         cout << i << ' ';
+        //     }
+        // }
         cout << "}";
     }
     

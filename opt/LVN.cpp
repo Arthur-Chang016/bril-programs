@@ -62,17 +62,16 @@ json convertToInstrs(vector<BasicBlock> &BBs) {
     return retInstrs;
 }
 
-vector<string> ConvertToVa(const vector<json> &vj) {
-    vector<string> ret;
+vector<long> ConvertToVa(const vector<json> &vj, unordered_map<string, int> &var2num) {
+    vector<long> ret;
     for(const json &j: vj) {
         if(j.is_string() == false) {
             cout << j << " is not a string";
             exit(1);
         }
-        ret.push_back(j);
+        ret.push_back(var2num[(string) j]);
     }
     return ret;
-    // return {};
 }
 
 BasicBlock LVN(BasicBlock &bb) {
@@ -80,7 +79,7 @@ BasicBlock LVN(BasicBlock &bb) {
     
     vector<LvnEntry> table;
     map<Value, int> value2num;
-    unordered_map<string, long> var2num;
+    unordered_map<string, int> var2num;
     
     for(json &inst: bb.instrs) {
         if(inst.count("label")) continue;
@@ -95,10 +94,12 @@ BasicBlock LVN(BasicBlock &bb) {
             continue;
         }
         
-        vector<string> args = inst.count("args") ? ConvertToVa(inst["args"]) : vector<string>();
+        vector<long> args = inst.count("args") ? ConvertToVa(inst["args"], var2num) : vector<long>();
         // build value
         // Value value((string) inst["op"], args);
         Value value = inst["op"] == "const" ? Value(inst["op"], (long)inst["value"]) : Value(inst["op"], args);
+        
+        
         
         int num = 0;
         if(value2num.count(value)) {
@@ -106,6 +107,19 @@ BasicBlock LVN(BasicBlock &bb) {
             string var = table[num].canVar;
             
             // TODO update the args with the var, if it's not const
+            
+            cout << "here ~!!~!!!!!!!!!!!" << endl;
+            // cout << inst << endl;
+            
+            json orig = inst;
+            
+            inst = json::object();
+            inst["args"] = json::array({var});
+            inst["dest"] = orig["dest"];
+            inst["op"] = "id";
+            inst["type"] = orig["type"];
+            
+            // cout << inst << endl;
             
             
         } else {
@@ -129,6 +143,7 @@ BasicBlock LVN(BasicBlock &bb) {
                 
             } else {
                 table.push_back(LvnEntry(value, dest));  // at the index "num"
+                value2num[value] = num;
             }
             
             
