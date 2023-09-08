@@ -28,17 +28,31 @@ public:
     string op;
     // vector<arg> args;
     vector<string> args;
+    long constVal = 0;
+    bool isConst = false;
     
     // constructor
-    Value(string o, vector<string> a): op(o), args(a) {
-        
-    }
+    Value(string o, vector<string> a): op(o), args(a), isConst(false) {}
+    Value(string o, long c): op(o), constVal(c), isConst(true) {}
     
     // comparator (for map)
     bool operator<(const Value& rhs) const {
         return op < rhs.op ? true : (args < rhs.args);
         
         // return pair<string, vector<string>>(op, args) < pair<string, vector<string>>(rhs.op, rhs.args);
+    }
+    
+    // methods
+    void print() {
+        cout << "{ " << op << " ";
+        if(isConst) {
+            cout << constVal << ' ';
+        } else {
+            for(string &s: args) {
+                cout << s << ' ';
+            }
+        }
+        cout << "}";
     }
     
     
@@ -72,6 +86,13 @@ public:
     // constructor
     LvnEntry(Value v, string c): value(v), canVar(c) {
         
+    }
+    
+    // methods
+    void print() {
+        value.print();
+        cout << ' ' << canVar;
+        // cout << value << ' ' << canVar;
     }
     
 };

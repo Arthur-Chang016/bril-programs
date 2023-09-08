@@ -76,7 +76,7 @@ vector<string> ConvertToVa(const vector<json> &vj) {
 }
 
 BasicBlock LVN(BasicBlock &bb) {
-    bb.print();
+    // bb.print();
     
     vector<LvnEntry> table;
     map<Value, int> value2num;
@@ -86,6 +86,9 @@ BasicBlock LVN(BasicBlock &bb) {
         if(inst.count("label")) continue;
         if(inst.count("op") == false) continue;
         
+        // if(inst["op"] == "const") continue;
+        if(inst.count("dest") == false) continue;
+        
         if(inst["op"] == "call") {
             // TODO, change some args to the new var
             cout << "it's call !!!!!!!!!!!!!!!" << endl;
@@ -94,37 +97,50 @@ BasicBlock LVN(BasicBlock &bb) {
         
         vector<string> args = inst.count("args") ? ConvertToVa(inst["args"]) : vector<string>();
         // build value
-        Value value((string) inst["op"], args);
+        // Value value((string) inst["op"], args);
+        Value value = inst["op"] == "const" ? Value(inst["op"], (long)inst["value"]) : Value(inst["op"], args);
         
+        int num = 0;
         if(value2num.count(value)) {
-            int num = value2num[value];
+            num = value2num[value];
             string var = table[num].canVar;
             
+            // TODO update the args with the var, if it's not const
             
             
+        } else {
+            // int newNum = table.size();
+            num = table.size();
+            string dest = inst["dest"];
+            
+            // TODO check if inst being overwritten
+            
+            if(inst["op"] == "id") {  // directly point to the target
+                string target = inst["args"][0];
+                var2num[dest] = var2num[target];
+                
+                // value.print();
+                // cout << endl;
+                
+                // for(auto [s, l]: var2num) {
+                //     cout << s << ' ' << l << endl;
+                // }
+                // cout << endl;
+                
+            } else {
+                table.push_back(LvnEntry(value, dest));  // at the index "num"
+            }
+            
+            
+            // replace args
+            if(inst.count("args")) {
+                for(json &arg: inst["args"]) {
+                    if(var2num.count(arg))
+                        arg = table[var2num[arg]].canVar;
+                }
+            }
         }
-        
-        
-        
-        // if(inst["op"] == "const") {
-            
-            
-            
-            
-        // } else if(inst.count("args")) {
-        //     // cout << "here : " << inst["args"].is_array() << endl;
-        //     // cout << "here : " << inst["args"] << endl;
-            
-        //     vector<string> args = inst.count("args") ? ConvertToVa(inst["args"]) : {};
-            
-            
-        //     // build value
-        //     Value value((string) inst["op"], args);
-        // }
-        
-        
-        
-        
+        var2num[inst["dest"]] = num;
         
     }
     
@@ -147,9 +163,9 @@ int main(int argc, char **argv) {
         
         
         for(BasicBlock &bb: BBs) {
-            // bb.print();
-            
             bb = LVN(bb);
+            
+            bb.print();
         }
         func["instrs"] = convertToInstrs(BBs);
     }
