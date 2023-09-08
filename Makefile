@@ -26,17 +26,18 @@ $(BUILDDIR):
 	
 # Miscellaneous
 run: all
-	# bril2json < test/print/add.bril | brili
-	# build/LVN < test/add.json
-	
-	# bril2json < test/add.bril | brili
-	bril2json < test/add.bril | build/LVN | brili
-	
-	
-	# bril2json < test/eight-queens.bril | build/LVN
-	# bril2json < test/eight-queens.bril | build/LVN | brili 8
-	
+	bril2json < test/add.bril | brili
+	bril2json < test/add.bril | build/LVN | build/TDCE | brili
 
+lvn: all
+	bril2json < test/add.bril | brili
+	bril2json < test/add.bril | build/LVN | brili
+
+tdce: all
+	bril2json < test/simple.bril | brili
+	bril2json < test/simple.bril | build/TDCE | brili
+	bril2json < test/reassign.bril | brili
+	bril2json < test/reassign.bril | build/TDCE | brili
 
 # Clean target to remove generated executables
 clean:
@@ -44,4 +45,4 @@ clean:
 
 .PHONY: all clean
 
-.SILENT: run
+# .SILENT: run
