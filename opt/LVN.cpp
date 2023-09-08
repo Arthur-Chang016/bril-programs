@@ -69,9 +69,25 @@ vector<long> ConvertToVa(const vector<json> &vj, unordered_map<string, int> &var
             cout << j << " is not a string";
             exit(1);
         }
-        ret.push_back(var2num[(string) j]);
+        ret.push_back(var2num.count(j) ? var2num[j] : -1);
+        // ret.push_back(var2num[(string) j]);
     }
     return ret;
+}
+
+bool ContainsN1(const vector<long> &arr) {
+    for(long l: arr)
+        if(l == -1) return true;
+    return false;
+}
+
+void ReplaceArgs(json &inst, const vector<LvnEntry> &table, unordered_map<string, int> &var2num) {
+    if(inst.count("args")) {
+        for(json &arg: inst["args"]) {
+            if(var2num.count(arg))
+                arg = table[var2num[arg]].canVar;
+        }
+    }
 }
 
 BasicBlock LVN(BasicBlock &bb) {
@@ -90,11 +106,19 @@ BasicBlock LVN(BasicBlock &bb) {
         
         if(inst["op"] == "call") {
             // TODO, change some args to the new var
+            ReplaceArgs(inst, table, var2num);
+            
             cout << "it's call !!!!!!!!!!!!!!!" << endl;
             continue;
         }
         
+        // if(inst["op"] == "id") {
+            
+        // }
+        
         vector<long> args = inst.count("args") ? ConvertToVa(inst["args"], var2num) : vector<long>();
+        
+        if(ContainsN1(args)) continue;  // to be conservative. If -1, don't modify this inst
         // build value
         // Value value((string) inst["op"], args);
         Value value = inst["op"] == "const" ? Value(inst["op"], (long)inst["value"]) : Value(inst["op"], args);
@@ -108,7 +132,7 @@ BasicBlock LVN(BasicBlock &bb) {
             
             // TODO update the args with the var, if it's not const
             
-            cout << "here ~!!~!!!!!!!!!!!" << endl;
+            // cout << "here ~!!~!!!!!!!!!!!" << endl;
             // cout << inst << endl;
             
             json orig = inst;
@@ -122,14 +146,13 @@ BasicBlock LVN(BasicBlock &bb) {
             // cout << inst << endl;
             
             
-        } else {
-            // int newNum = table.size();
+        } else {  // the value is not found
             num = table.size();
             string dest = inst["dest"];
             
             // TODO check if inst being overwritten
             
-            if(inst["op"] == "id") {  // directly point to the target
+            if(inst["op"] == "id" && var2num.count(inst["args"][0])) {  // directly point to the target
                 string target = inst["args"][0];
                 var2num[dest] = var2num[target];
                 
@@ -142,18 +165,22 @@ BasicBlock LVN(BasicBlock &bb) {
                 // cout << endl;
                 
             } else {
+                // value.print();
+                
                 table.push_back(LvnEntry(value, dest));  // at the index "num"
                 value2num[value] = num;
             }
             
             
             // replace args
-            if(inst.count("args")) {
-                for(json &arg: inst["args"]) {
-                    if(var2num.count(arg))
-                        arg = table[var2num[arg]].canVar;
-                }
-            }
+            ReplaceArgs(inst, table, var2num);
+            
+            // if(inst.count("args")) {
+            //     for(json &arg: inst["args"]) {
+            //         if(var2num.count(arg))
+            //             arg = table[var2num[arg]].canVar;
+            //     }
+            // }
         }
         var2num[inst["dest"]] = num;
         

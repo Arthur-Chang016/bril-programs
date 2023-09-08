@@ -3,6 +3,11 @@
         "istream": "cpp",
         "vector": "cpp",
         "ostream": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "string": "cpp",
+        "__bit_reference": "cpp",
+        "bitset": "cpp",
+        "chrono": "cpp",
+        "unordered_map": "cpp"
     }
 }

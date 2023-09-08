@@ -28,8 +28,8 @@ $(BUILDDIR):
 run: all
 	# bril2json < test/print/add.bril | brili
 	# build/LVN < test/add.json
-	bril2json < test/add.bril | build/LVN
-	# bril2json < test/eight-queens.bril | build/LVN
+	# bril2json < test/add.bril | build/LVN
+	bril2json < test/eight-queens.bril | build/LVN
 	
 
 
