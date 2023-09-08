@@ -63,9 +63,20 @@ json convertToInstrs(vector<BasicBlock> &BBs) {
     return retInstrs;
 }
 
+unordered_set<string> Allvars(BasicBlock &bb) {
+    unordered_set<string> ret;
+    for(json &inst: bb.instrs) {
+        if(inst.count("dest")) ret.insert(inst["dest"]);
+        if(inst.count("args")) {
+            for(json &j: inst["args"]) ret.insert(j);
+        }
+    }
+    return ret;
+}
+
 BasicBlock SingleTDCE(BasicBlock &bb) {
     
-    unordered_set<string> live;
+    unordered_set<string> live = Allvars(bb);
     // for(json &inst: bb.instrs) {
         
     for(int i = bb.instrs.size() - 1; i >= 0; --i) {
