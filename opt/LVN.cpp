@@ -105,10 +105,9 @@ BasicBlock LVN(BasicBlock &bb) {
         if(inst.count("dest") == false) continue;
         
         if(inst["op"] == "call") {
-            // TODO, change some args to the new var
+            // replace args
             ReplaceArgs(inst, table, var2num);
-            
-            cout << "it's call !!!!!!!!!!!!!!!" << endl;
+            // cout << "it's call !!!!!!!!!!!!!!!" << endl;
             continue;
         }
         
@@ -170,17 +169,8 @@ BasicBlock LVN(BasicBlock &bb) {
                 table.push_back(LvnEntry(value, dest));  // at the index "num"
                 value2num[value] = num;
             }
-            
-            
             // replace args
             ReplaceArgs(inst, table, var2num);
-            
-            // if(inst.count("args")) {
-            //     for(json &arg: inst["args"]) {
-            //         if(var2num.count(arg))
-            //             arg = table[var2num[arg]].canVar;
-            //     }
-            // }
         }
         var2num[inst["dest"]] = num;
         
@@ -207,12 +197,12 @@ int main(int argc, char **argv) {
         for(BasicBlock &bb: BBs) {
             bb = LVN(bb);
             
-            bb.print();
+            // bb.print();
         }
         func["instrs"] = convertToInstrs(BBs);
     }
-    
-    // cout << program << endl;
+    // pretty printer
+    cout << program.dump(2) << endl;
     
     
     return 0;

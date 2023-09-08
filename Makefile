@@ -28,8 +28,13 @@ $(BUILDDIR):
 run: all
 	# bril2json < test/print/add.bril | brili
 	# build/LVN < test/add.json
-	# bril2json < test/add.bril | build/LVN
-	bril2json < test/eight-queens.bril | build/LVN
+	
+	# bril2json < test/add.bril | brili
+	bril2json < test/add.bril | build/LVN | brili
+	
+	
+	# bril2json < test/eight-queens.bril | build/LVN
+	# bril2json < test/eight-queens.bril | build/LVN | brili 8
 	
 
 
@@ -38,3 +43,5 @@ clean:
 	rm -rf $(BUILDDIR)
 
 .PHONY: all clean
+
+.SILENT: run
