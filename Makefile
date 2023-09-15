@@ -32,6 +32,9 @@ run: all
 lvn: all
 	bril2json < test/add.bril | brili
 	bril2json < test/add.bril | build/LVN | brili
+	
+live: all
+	bril2json < test/add.bril | build/Liveness
 
 tdce: all
 	bril2json < test/simple.bril | brili
