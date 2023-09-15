@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <map>
+#include <set>
 using namespace std;
 
 // json lib: https://github.com/nlohmann/json
@@ -82,11 +83,11 @@ pair<vector<BasicBlock>, unordered_map<int, vector<int>>> BuildCFG(json instrs) 
         }
     }
     
-    for(auto [i, v]: graph) {
-        cout << i << ": ";
-        for(int j: v) cout << j << ' ';
-        cout << endl;
-    }
+    // for(auto [i, v]: graph) {
+    //     cout << i << ": ";
+    //     for(int j: v) cout << j << ' ';
+    //     cout << endl;
+    // }
     
     
     
@@ -103,6 +104,47 @@ json convertToInstrs(vector<BasicBlock> &BBs) {
     return retInstrs;
 }
 
+/**
+ * the return array's size corresponds to the BB
+ * each BB has only 1 instructions
+*/
+pair<vector<vector<string>>, vector<vector<string>>> BuildLiveness(vector<BasicBlock> &BBs) {
+    vector<vector<string>> defs(BBs.size()), uses(BBs.size());
+    for(int i = 0; i < BBs.size(); ++i) {
+        BasicBlock &bb = BBs[i];
+        json inst = bb.instrs.size() > 1 ? bb.instrs[1] : bb.instrs[0];
+        
+        if(inst.count("dest")) {
+            defs[i].push_back(inst["dest"]);
+        }
+        if(inst.count("args")) {
+            uses[i].insert(uses[i].end(), inst["args"].begin(), inst["args"].end());
+        }
+    }
+    return {defs, uses};
+}
+
+void print(vector<vector<string>> &defs, vector<vector<string>> &uses) {
+    cout << "{" << endl;
+    for(int i = 0; i < defs.size(); ++i) {  // assume they have the same size
+        cout << "{ defs: ";
+        for(string s: defs[i]) {
+            cout << s << ' ';
+        }
+        cout << ", uses: ";
+        for(string s: uses[i]) {
+            cout << s << ' ';
+        }
+        cout << "}" << endl;
+    }
+    cout << "}" << endl;
+}
+
+pair<vector<set<string>>, vector<set<string>>> WorkList(vector<vector<string>> &defs, vector<vector<string>> &uses, unordered_map<int, vector<int>> &graph) {
+    
+    
+    return {};
+}
 
 int main(int argc, char **argv) {
     json program = ReadStdin();
@@ -111,6 +153,20 @@ int main(int argc, char **argv) {
     
     for(auto &func: program["functions"]) {
         auto [BBs, graph] = BuildCFG(func["instrs"]);
+        auto [defs, uses] = BuildLiveness(BBs);
+        
+        // for(auto v: defs) {
+        //     for(string s: v) cout << s << ' ';
+        //     cout << endl;
+        // }
+        // for(auto v: defs) {
+        //     for(string s: v) cout << s << ' ';
+        //     cout << endl;
+        // }
+        
+        print(defs, uses);
+        
+        auto [in, out] = WorkList(defs, uses, graph);
         
         
         

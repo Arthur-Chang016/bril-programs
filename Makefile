@@ -34,6 +34,7 @@ lvn: all
 	bril2json < test/add.bril | build/LVN | brili
 	
 live: all
+	# bril2json < test/eight-queens.bril | build/Liveness
 	bril2json < test/add.bril | build/Liveness
 
 tdce: all
