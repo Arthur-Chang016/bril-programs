@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -std=c++11 -Wall -I./lib -I./include
+CXXFLAGS := -std=c++17 -Wall -I./lib -I./include
 
 # Directories
 SRCDIR := opt
@@ -34,8 +34,8 @@ lvn: all
 	bril2json < test/add.bril | build/LVN | brili
 	
 live: all
-	# bril2json < test/eight-queens.bril | build/Liveness
-	bril2json < test/add.bril | build/Liveness
+	bril2json < test/eight-queens.bril | build/Liveness
+	# bril2json < test/add.bril | build/Liveness
 
 tdce: all
 	bril2json < test/simple.bril | brili

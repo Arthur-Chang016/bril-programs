@@ -9,6 +9,10 @@
         "bitset": "cpp",
         "chrono": "cpp",
         "unordered_map": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "unordered_set": "cpp",
+        "set": "cpp",
+        "__locale": "cpp",
+        "ios": "cpp"
     }
 }

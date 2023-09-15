@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <set>
 using namespace std;
@@ -68,8 +69,6 @@ pair<vector<BasicBlock>, unordered_map<int, vector<int>>> BuildCFG(json instrs) 
         // the first might be label
         json inst = bb.instrs.size() > 1 ? bb.instrs[1] : bb.instrs[0];
         if(isControl(inst)) {
-            // (inst["op"] == "br" || inst["op"] == "jmp" || inst["op"] == "ret")
-            
             if(inst.count("labels")) {
                 for(json str: inst["labels"]) {
                     graph[i].push_back(label2ind[str]);
@@ -82,14 +81,6 @@ pair<vector<BasicBlock>, unordered_map<int, vector<int>>> BuildCFG(json instrs) 
                 graph[i].push_back(i + 1);
         }
     }
-    
-    // for(auto [i, v]: graph) {
-    //     cout << i << ": ";
-    //     for(int j: v) cout << j << ' ';
-    //     cout << endl;
-    // }
-    
-    
     
     return {ret, graph};
 }
@@ -140,38 +131,95 @@ void print(vector<vector<string>> &defs, vector<vector<string>> &uses) {
     cout << "}" << endl;
 }
 
-pair<vector<set<string>>, vector<set<string>>> WorkList(vector<vector<string>> &defs, vector<vector<string>> &uses, unordered_map<int, vector<int>> &graph) {
+void print(vector<set<string>> &in, vector<set<string>> &out) {
+    cout << "{" << endl;
+    for(int i = 0; i < in.size(); ++i) {  // assume they have the same size
+        cout << "{ in: ";
+        for(string s: in[i]) {
+            cout << s << ' ';
+        }
+        cout << ", out: ";
+        for(string s: out[i]) {
+            cout << s << ' ';
+        }
+        cout << "}" << endl;
+    }
+    cout << "}" << endl;
+}
+
+unordered_map<int, vector<int>> BuildPred(unordered_map<int, vector<int>> &graph) {
+    unordered_map<int, vector<int>> pred;
+    for(int i = 0; i < graph.size(); ++i)
+        pred[i] = {};
     
+    for(int i = 0; i < graph.size(); ++i) {
+        for(int next: graph[i]) {
+            pred[next].push_back(i);  // reverse edges
+        }
+    }
+    return pred;
+}
+
+pair<bool, set<string>> UnionSucc(set<string> &self, vector<int> &Succ, vector<vector<string>> &uses) {
+    set<string> ret = self;
+    for(int next: Succ) {
+        vector<string> use = uses[next];
+        ret.insert(begin(use), end(use));
+    }
+    bool isChange = self.size() != ret.size();
+    return {isChange, ret};
+}
+
+pair<bool, set<string>> MakeIn(set<string> &out, vector<string> &def, vector<string> &use, set<string> &in) {
+    set<string> ret = out;
+    // out - def
+    for(string &s : def) {
+        ret.erase(s);
+    }
+    // use U (out - def)
+    ret.insert(begin(use), end(use));
     
-    return {};
+    return {in != ret, ret};
+}
+
+pair<vector<set<string>>, vector<set<string>>> WorkList(vector<vector<string>> &defs, vector<vector<string>> &uses, unordered_map<int, vector<int>> &graph, unordered_map<int, vector<int>> &pred) {
+    vector<set<string>> in(defs.size()), out(defs.size());
+    unordered_set<int> workList;
+    // init workList
+    for(int i = 0; i < defs.size(); ++i)
+        workList.insert(i);
+    
+    while(workList.empty() == false) {
+        int ind = *workList.begin();
+        workList.erase(workList.begin());
+        
+        auto [isChangeOut, tmpOut] = UnionSucc(out[ind], graph[ind], uses);  // union all succ as out
+        out[ind] = tmpOut;
+        
+        auto [isChangeIn, tmpIn] = MakeIn(out[ind], defs[ind], uses[ind], in[ind]);
+        in[ind] = tmpIn;
+        
+        if(isChangeOut || isChangeIn)
+            workList.insert(begin(pred[ind]), end(pred[ind]));
+    }
+    return {in, out};
 }
 
 int main(int argc, char **argv) {
     json program = ReadStdin();
     
-    // cout << program << endl;
-    
     for(auto &func: program["functions"]) {
         auto [BBs, graph] = BuildCFG(func["instrs"]);
         auto [defs, uses] = BuildLiveness(BBs);
+        auto pred = BuildPred(graph);
         
-        // for(auto v: defs) {
-        //     for(string s: v) cout << s << ' ';
-        //     cout << endl;
-        // }
-        // for(auto v: defs) {
-        //     for(string s: v) cout << s << ' ';
-        //     cout << endl;
-        // }
+        auto [in, out] = WorkList(defs, uses, graph, pred);
         
         print(defs, uses);
-        
-        auto [in, out] = WorkList(defs, uses, graph);
-        
+        print(in, out);
         
         
         for(BasicBlock &bb: BBs) {
-            // bb = LVN(bb);
             
             bb.print();
         }
